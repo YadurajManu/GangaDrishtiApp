@@ -1,0 +1,345 @@
+TABLE OF CONTENTS
+1. INTRODUCTION ........................................................................... 3
+1.1 Purpose ................................................................................. 3
+1.2 Scope .................................................................................... 3
+1.3 Definitions, Acronyms, and Abbreviations .............................. 4
+1.4 References ............................................................................. 4
+1.5 Overview ............................................................................... 4
+2. OVERALL DESCRIPTION .............................................................. 5
+2.1 Product Perspective ................................................................. 5
+2.2 Product Functions .................................................................. 5
+2.3 User Characteristics ................................................................. 6
+2.4 Constraints ............................................................................. 6
+2.5 Assumptions and Dependencies ............................................. 7
+3. SPECIFIC REQUIREMENTS ......................................................... 8
+3.1 Functional Requirements ......................................................... 8
+3.2 Non-Functional Requirements ............................................... 10
+3.3 External Interface Requirements ........................................... 11
+4. SYSTEM MODELS ........................................................................ 13
+4.1 Use Case Diagrams ................................................................ 13
+4.2 Data Flow Diagrams .............................................................. 14
+4.3 Entity–Relationship Diagram ................................................. 15
+5. APPENDICES ................................................................................ 16
+5.1 Glossary ................................................................................ 16
+5.2 Future Enhancements ............................................................ 16
+5.3 References ............................................................................ 17
+1. INTRODUCTION
+1.1 Purpose
+The purpose of this Software Requirements Specification (SRS) document is
+to define the requirements for the Microplastic Detection System (MDS).
+This system is designed to detect and analyze microplastics present in
+environmental samples such as water.
+It combines a hardware setup (microscope with camera) and a custom-trained
+machine learning (ML) model with software applications (web and iOS) that
+provide dashboards for administrators, government/municipality authorities,
+and researchers.
+This SRS will serve as a reference for ppt makers. Iot devs, developers, and
+other team members involved in the project.
+1.2 Scope
+The MDS project aims to provide an end-to-end solution for the detection and
+reporting of microplastic pollution.
+The system captures magnified images using a microscope, processes them
+with a trained ML model, and presents the results
+through interactive dashboards.
+Key functionalities include:
+●
+Live feed monitoring of samples through the admin dashboard.
+●
+Uploading sample images for automated ML analysis.
+●
+Generating detailed analytical reports (PDF) based on detected
+microplastics.
+●
+Providing government/municipality dashboards with heatmaps and
+statistical insights (e.g., data from Uttar Pradesh as a case study).
+●
+Offering researchers the ability to run custom analyses on their own
+uploaded images.
+The system will be accessible via a secure web application and an iOS mobile
+application.
+It will support role-based access control to ensure that different users (admin,
+government, researcher)
+can only access features relevant to their role.
+1.3 Definitions, Acronyms, and Abbreviations
+●
+MDS: Microplastic Detection System
+●
+ML: Machine Learning
+●
+●
+●
+●
+SRS: Software Requirements Specification
+UI: User Interface
+DB: Database
+UP: Uttar Pradesh (example state used in pilot deployment)
+1.4 References
+1. IEEE Standard 830-1998: Recommended Practice for Software
+Requirements Specifications.
+2. Research articles and datasets on microplastic detection using
+microscopy and ML models.
+3. Project documentation and academic references provided by [Your
+Institute/Guide].
+1.5 Overview
+This document is organized into five major sections: Introduction, Overall
+Description, Specific Requirements, System Models, and Appendices.
+The document provides a complete description of the MDS, including its
+objectives, system environment, functions, performance requirements,
+and design constraints. The SRS will act as a baseline for development and
+validation of the system.
+2. OVERALL DESCRIPTION
+2.1 Product Perspective
+The Microplastic Detection System (MDS) is a standalone solution that
+integrates custom-built hardware and software.
+The hardware includes a microscope with an attached digital camera(esp32)
+for capturing magnified images of water samples.
+Captured images are stored in a central database (supabase) and processed
+by a machine learning (ML) model trained to detect and classify microplastics.
+The software component consists of a web-based application and an iOS
+mobile application.
+These applications provide dashboards tailored to different stakeholders:
+●
+Admins can view live feeds, upload images, initiate analysis, and
+generate reports.
+●
+Government authorities can access regional heatmaps, trends, and
+policy-oriented data.
+●
+Researchers can upload their own images, run analysis, and export
+detailed results.
+The system communicates through secure authentication provided by
+Supabase Auth and follows a modular architecture, separating hardware
+control, ML inference, database management, and user interface layers.
+2.2 Product Functions
+The major functions of the MDS are:
+●
+Image Capture & Upload: Capture sample images via microscope
+hardware and upload them to the system.
+●
+Microplastic Analysis: Run ML-based detection and classification on
+uploaded images.
+●
+Report Generation: Create downloadable reports (PDF) containing
+analysis results, summaries, and statistics.
+●
+Heatmap Visualization: Display pollution hotspots on a map (e.g., by
+districts in Uttar Pradesh).
+●
+Live Feed Monitoring: Allow admins to view the microscope’s live
+stream in real-time.
+●
+Researcher Tools: Enable researchers to upload custom images,
+perform analysis, and store/export results.
+●
+Role-Based Access Control: Assign permissions and restrict
+functionality by user type.
+2.3 User Characteristics
+●
+Admin Users: Technically proficient operators who manage the system,
+hardware, and reports.
+●
+Government/Municipality Users: Policy makers and environmental
+authorities, focused on aggregated insights, heatmaps, and trends.
+●
+Researchers: Academics or scientists who need flexible tools for
+uploading their own datasets and conducting experiments.
+●
+End Users/Public (optional): May access limited awareness
+dashboards showing pollution statistics.
+2.4 Constraints
+●
+Hardware limitations: The microscope hardware may limit image
+resolution and processing speed.
+●
+Network dependency: Live feed and uploads require stable internet
+connectivity.
+●
+Computational constraints: ML model inference relies on GPU/cloud
+servers, which may have cost and performance restrictions.
+●
+Data privacy: Images and reports must be securely stored and
+transmitted, following institutional and governmental guidelines.
+●
+Platform support: System must support modern browsers and iOS
+devices.
+2.5 Assumptions and Dependencies
+●
+The microscope hardware will produce clear, high-resolution images
+suitable for ML analysis.
+●
+Governmental data (e.g., maps) will be available for heatmap
+generation.
+●
+Cloud or local GPU servers will be provisioned for ML training and
+inference.(google notebooks)
+●
+Custom dataset.
+●
+The project will initially focus on Uttar Pradesh but can be scaled to
+other regions.
+3. SPECIFIC REQUIREMENTS
+3.1 Functional Requirements
+FR-01 Image Capture and Upload
+●
+The system shall capture sample images through the ESP32-CAM
+attached to the microscope.
+●
+●
+The ESP32-CAM shall support configurable resolutions (default:
+640×480, optional: 1280×720).
+The ESP32-CAM shall upload captured images to the backend server
+using HTTP POST requests.
+FR-02 Live Video Feed
+●
+The system shall allow administrators to view the live microscope feed
+in real-time.
+●
+The ESP32-CAM shall provide RTSP/WebSocket-based video
+streaming.
+●
+The web dashboard shall integrate the live feed in a secure frame with
+role-based access.
+FR-03 Image Analysis (ML Model)
+●
+The system shall process uploaded images using a custom-trained
+machine learning (ML) model.
+●
+The ML model shall detect and classify microplastics within the range of
+50 μm to 100 μm.
+●
+The system shall output results including:
+●
+- Presence/absence of microplastics
+●
+- Type of microplastic (e.g., PP , PE )
+●
+- Count of microplastic particles
+FR-04 Report Generation
+●
+The system shall generate downloadable reports in PDF and CSV
+format.
+●
+Reports shall include:
+●
+Sample ID, capture timestamp, location
+●
+Detected microplastic details (type, count)
+●
+Aggregated summaries (daily/weekly/monthly)
+●
+Reports shall be digitally signed for authenticity.
+FR-05 Heatmap Visualization
+●
+The system shall generate geospatial heatmaps showing microplastic
+concentration levels.
+●
+Heatmaps shall be filterable by:
+●
+Region (district/state level)
+●
+Time range
+●
+Microplastic type
+●
+Government dashboards shall display trends (e.g., pollution hotspots in
+Uttar Pradesh).
+FR-06 Role-Based Dashboards
+●
+Admin Dashboard:
+- Access live feed
+- Upload/manage samples
+- Run analysis manually
+- Approve and publish reports
+●
+Government Dashboard:
+- View state/district heatmaps
+- Access historical reports
+- Download statistical summaries for policy
+●
+Researcher Dashboard:
+- Upload their own sample images
+- Run analysis on custom images
+- Export raw results and datasets
+FR-07 Data Management
+●
+The system shall store all uploaded images, analysis results, and
+reports in a secure database.
+●
+Each sample shall be uniquely tagged with Sample ID, date, location,
+and operator.
+●
+Old images (>12 months) shall be archived automatically.
+FR-08 Notifications & Alerts
+●
+The system shall send email/SMS notifications to admins when:
+- A new sample is uploaded
+- Anomalous pollution levels are detected
+3.2 Non-Functional Requirements
+●
+NFR-01 Performance
+- Image upload shall not exceed 3 seconds per sample (for ≤5 MB JPEG).
+- ML inference time per image shall not exceed 10 seconds on cloud.
+●
+NFR-02 Reliability & Availability
+- The system shall achieve ≥99% uptime for dashboards and APIs.
+- Failed uploads shall retry automatically up to 3 times.
+●
+NFR-03 Security
+- All data transmissions shall be encrypted using HTTPS (TLS 1.2+).
+- User accounts shall require 2-factor authentication.
+- Access control shall enforce least-privilege principles.
+●
+NFR-04 Scalability
+- The system shall handle at least 500 concurrent researcher analyses.
+- The system shall support up to 10,000 stored samples per deployment.
+●
+NFR-05 Usability
+- Dashboards shall support responsive design (desktop, tablet, iOS).
+- Researcher upload workflow shall require no more than 3 steps.
+3.3 External Interface Requirements
+3.3.1 User Interface (UI)
+●
+The web application shall use a clean, minimalistic dashboard design.
+●
+The mobile app (iOS) shall provide access to dashboards with reduced
+complexity.
+●
+Graphs, heatmaps, and reports shall follow accessibility guidelines
+(colorblind-friendly palettes).
+3.3.2 Hardware Interface
+●
+The ESP32-CAM shall:
+- Capture still images and live video streams
+- Communicate with Supabase storage via Wi-Fi (2.4 GHz)
+- Support OTA (Over-The-Air) firmware updates
+3.3.3 Software Interface
+●
+Firebase shall be used for authentication and database (Firestore).
+●
+Custom API shall be used for image storage and retrieval:
+   Base URL: https://gangaapi.onrender.com/
+   Endpoints:
+   - Upload: /upload
+   - Get all images: /images
+   - Get image by ID: /images/{image_id}
+   - Delete image: /images/{image_id}/delete
+3.3.4 Communication Interface
+●
+services.
+Wi-Fi communication between ESP32-CAM and Supabase storage
+●
+Secure HTTPS channels for all client–Supabase interactions.
+4. SYSTEM MODELS
+4.1 Use Case Model
+1. Actors:
+●
+reports.
+●
+Admin: Manages system, uploads samples, views live feed, generates
+Government User: Views heatmaps, trends, and downloads reports.
+●
+Researcher: Uploads their own images, runs analysis, downloads
+●
+●
+results.
+ESP32-CAM: Captures images/video and uploads them to Supabase.
