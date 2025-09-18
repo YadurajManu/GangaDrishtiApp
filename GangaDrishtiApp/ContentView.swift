@@ -27,37 +27,51 @@ struct ContentView: View {
 // MARK: - Main App View (Placeholder)
 struct MainAppView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
-    
+
     var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 60))
-                .foregroundColor(.green)
-            
-            Text("Welcome to GangaDrishti!")
-                .font(.title)
-                .fontWeight(.bold)
-            
-            Text("You are successfully logged in.")
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-            
-            if let user = authViewModel.currentUser {
-                Text("Logged in as: \(user.email)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            
-            Button("Logout") {
-                authViewModel.logout()
+        VStack(spacing: 0) {
+            // Simple top bar
+            HStack {
+                Text("GangaDrishti")
+                    .font(.system(size: 20, weight: .bold))
+                Spacer()
+                Button("Logout") {
+                    authViewModel.logout()
+                }
+                .padding(8)
+                .background(Color.red)
+                .foregroundColor(.white)
+                .cornerRadius(8)
             }
             .padding()
-            .background(Color.red)
-            .foregroundColor(.white)
-            .cornerRadius(8)
+            .background(Color(.secondarySystemBackground))
+
+            // Role-based dashboard placeholder
+            Group {
+                if let user = authViewModel.currentUser {
+                    switch user.role {
+                    case .admin:
+                        AdminDashboardView()
+                    case .government:
+                        GovernmentDashboardView()
+                    case .researcher:
+                        ResearcherDashboardView()
+                    }
+                } else {
+                    VStack(spacing: 12) {
+                        Image(systemName: "person.crop.circle.badge.questionmark")
+                            .font(.system(size: 48))
+                            .foregroundColor(.gray)
+                        Text("Unknown User")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color(.systemGroupedBackground))
+                }
+            }
         }
-        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

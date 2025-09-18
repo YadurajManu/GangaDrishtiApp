@@ -9,6 +9,7 @@ import SwiftUI
 
 struct LoginView: View {
     @ObservedObject var authViewModel: AuthViewModel
+    @State private var showForgotPassword = false
     
     var body: some View {
         VStack(spacing: 24) {
@@ -42,7 +43,7 @@ struct LoginView: View {
                 Spacer()
                 
                 Button(action: {
-                    authViewModel.forgotPassword()
+                    showForgotPassword = true
                 }) {
                     Text("Forgot Password ?")
                         .font(.system(size: 14, weight: .medium))
@@ -82,6 +83,12 @@ struct LoginView: View {
             }
         }
         .padding(.horizontal, 24)
+        .sheet(isPresented: $showForgotPassword) {
+            ForgotPasswordView()
+                .presentationDetents([.fraction(0.92)])
+                .presentationCornerRadius(24)
+                .presentationDragIndicator(.visible) // allow swipe down dismissal
+        }
     }
 }
 

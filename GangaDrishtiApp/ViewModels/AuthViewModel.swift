@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import FirebaseAuth
 
 @MainActor
 class AuthViewModel: ObservableObject {
@@ -31,61 +32,52 @@ class AuthViewModel: ObservableObject {
     @Published var showPassword = false
     @Published var showSignupPassword = false
     
+    private let authService = AuthService.shared
+    private let firestoreService = FirestoreService.shared
+    
     init() {
-        // Check if user is already authenticated
-        checkAuthenticationStatus()
+        observeAuthState()
     }
     
     // MARK: - Authentication Methods
     func login() {
         guard validateLoginForm() else { return }
-        
         isLoading = true
         errorMessage = nil
         
-        let loginRequest = LoginRequest(
-            email: loginEmail,
-            password: loginPassword,
-            rememberMe: rememberMe
-        )
-        
-        // TODO: Implement actual API call
-        // For now, simulate successful login
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            self.isLoading = false
-            self.isAuthenticated = true
-            self.currentUser = User(
-                id: UUID().uuidString,
-                email: loginRequest.email,
-                role: .researcher
-            )
+        Task {
+            do {
+                let fbUser = try await authService.signIn(email: loginEmail, password: loginPassword)
+                try await postLoginSetup(firebaseUser: fbUser)
+            } catch {
+                self.errorMessage = error.localizedDescription
+                self.isLoading = false
+            }
         }
     }
     
     func signUp() {
         guard validateSignupForm() else { return }
-        
         isLoading = true
         errorMessage = nil
         
-        let signupRequest = SignUpRequest(
-            email: signupEmail,
-            password: signupPassword,
-            mobileNumber: signupMobileNumber,
-            role: selectedRole
-        )
-        
-        // TODO: Implement actual API call
-        // For now, simulate successful signup
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            self.isLoading = false
-            self.isAuthenticated = true
-            self.currentUser = User(
-                id: UUID().uuidString,
-                email: signupRequest.email,
-                mobileNumber: signupRequest.mobileNumber,
-                role: signupRequest.role
-            )
+        Task {
+            do {
+                let fbUser = try await authService.signUp(email: signupEmail, password: signupPassword)
+                // Save profile to Firestore
+                let profile = UserProfile(
+                    id: fbUser.uid,
+                    email: signupEmail,
+                    mobileNumber: signupMobileNumber,
+                    role: selectedRole.rawValue,
+                    createdAt: Date()
+                )
+                try await firestoreService.saveUserProfile(profile)
+                try await postLoginSetup(firebaseUser: fbUser)
+            } catch {
+                self.errorMessage = error.localizedDescription
+                self.isLoading = false
+            }
         }
     }
     
@@ -93,28 +85,86 @@ class AuthViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         
-        // TODO: Implement Google Sign-In
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+        guard let root = UIApplication.shared.connectedScenes
+            .compactMap({ ($0 as? UIWindowScene)?.keyWindow })
+            .first?.rootViewController else {
+            self.errorMessage = "Unable to access root view controller"
             self.isLoading = false
-            self.isAuthenticated = true
-            self.currentUser = User(
-                id: UUID().uuidString,
-                email: "user@gmail.com",
-                role: .researcher
-            )
+            return
+        }
+        
+        Task {
+            do {
+                let fbUser = try await authService.signInWithGoogle(presenting: root)
+                // Ensure Firestore profile exists; if not, create with default role
+                let existing = try await firestoreService.fetchUserProfile(userId: fbUser.uid)
+                if existing == nil {
+                    let profile = UserProfile(
+                        id: fbUser.uid,
+                        email: fbUser.email ?? "",
+                        mobileNumber: nil,
+                        role: UserRole.researcher.rawValue,
+                        createdAt: Date()
+                    )
+                    try await firestoreService.saveUserProfile(profile)
+                }
+                try await postLoginSetup(firebaseUser: fbUser)
+            } catch {
+                self.errorMessage = error.localizedDescription
+                self.isLoading = false
+            }
         }
     }
     
-    
     func logout() {
-        isAuthenticated = false
-        currentUser = nil
-        clearFormFields()
+        do {
+            try authService.signOut()
+            isAuthenticated = false
+            currentUser = nil
+            clearFormFields()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
     
-    func forgotPassword() {
-        // TODO: Implement forgot password functionality
-        errorMessage = "Forgot password functionality will be implemented soon"
+    func sendPasswordReset(email: String) async throws {
+        try await authService.sendPasswordReset(email: email)
+    }
+    
+    // MARK: - Helpers
+    private func postLoginSetup(firebaseUser: FirebaseAuth.User) async throws {
+        // Load profile and map to app User
+        let profile = try await firestoreService.fetchUserProfile(userId: firebaseUser.uid)
+        let role = UserRole(rawValue: profile?.role ?? UserRole.researcher.rawValue) ?? .researcher
+        let appUser = User(
+            id: firebaseUser.uid,
+            email: firebaseUser.email ?? "",
+            mobileNumber: profile?.mobileNumber,
+            role: role,
+            isEmailVerified: firebaseUser.isEmailVerified
+        )
+        self.currentUser = appUser
+        self.isAuthenticated = true
+        self.isLoading = false
+    }
+    
+    private func observeAuthState() {
+        Auth.auth().addStateDidChangeListener { [weak self] _, user in
+            guard let self = self else { return }
+            Task { @MainActor in
+                if let user = user {
+                    do {
+                        try await self.postLoginSetup(firebaseUser: user)
+                    } catch {
+                        self.errorMessage = error.localizedDescription
+                        self.isLoading = false
+                    }
+                } else {
+                    self.isAuthenticated = false
+                    self.currentUser = nil
+                }
+            }
+        }
     }
     
     // MARK: - Form Validation
@@ -186,11 +236,6 @@ class AuthViewModel: ObservableObject {
         let mobileRegex = "^[0-9]{10}$"
         let mobilePredicate = NSPredicate(format: "SELF MATCHES %@", mobileRegex)
         return mobilePredicate.evaluate(with: mobile)
-    }
-    
-    private func checkAuthenticationStatus() {
-        // TODO: Check for stored authentication token
-        // For now, user starts as not authenticated
     }
     
     private func clearFormFields() {
