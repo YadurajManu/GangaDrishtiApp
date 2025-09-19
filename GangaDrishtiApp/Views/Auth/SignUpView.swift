@@ -70,9 +70,9 @@ struct SignUpView: View {
             .padding(.vertical, 8)
             
             // Google Sign-In Button
-            GoogleSignInButton {
+            GoogleSignInButton(action: {
                 authViewModel.signInWithGoogle()
-            }
+            })
         }
         .padding(.horizontal, 24)
     }

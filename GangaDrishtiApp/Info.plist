@@ -15,5 +15,11 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict/>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to capture microplastic samples for analysis and monitoring.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs photo library access to select existing microplastic sample images for analysis.</string>
 </dict>
 </plist>
